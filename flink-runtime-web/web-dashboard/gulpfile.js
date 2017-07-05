@@ -21,12 +21,10 @@
 // ----------------------------------------------------------------------------
 
 var gulp = require('gulp');
-var gutil = require('gulp-util');
 var jade = require('gulp-jade');
 var livereload = require('gulp-livereload');
 var plumber = require('gulp-plumber');
 var stylus = require('gulp-stylus');
-var browserify = require('gulp-browserify');
 var concat = require('gulp-concat');
 var uglify = require('gulp-uglify');
 var ngAnnotate = require('gulp-ng-annotate');
