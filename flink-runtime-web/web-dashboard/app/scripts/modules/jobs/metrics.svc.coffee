@@ -18,7 +18,7 @@
 
 angular.module('flinkApp')
 
-.service 'MetricsService', ($http, $q, flinkConfig, $interval) ->
+.service 'MetricsService', ($http, $q, flinkConfig, $interval, watermarksConfig) ->
   @metrics = {}
   @values = {}
   @watched = {}
@@ -206,6 +206,66 @@ angular.module('flinkApp')
       }
       @saveValue(jobid, nodeid, newValue)
       deferred.resolve(newValue)
+
+    deferred.promise
+
+
+  # Asynchronously requests the watermark metrics for the given nodes. The
+  # returned object has the following structure:
+  #
+  # {
+  #    "<nodeId>": {
+  #          "lowWatermark": <lowWatermark>
+  #          "watermarks": {
+  #               0: <watermark for subtask 0>
+  #               ...
+  #               n: <watermark for subtask n>
+  #            }
+  #       }
+  # }
+  #
+  # If no watermark is available, lowWatermark will be NaN and
+  # the watermarks will be empty.
+  @getWatermarks = (jid, nodes) ->
+    # Requests the watermarks for a single vertex. Triggers a request
+    # to the Metrics service.
+    requestWatermarkForNode = (node) =>
+      deferred = $q.defer()
+
+      # Request metrics for each subtask
+      metricIds = (i + ".currentLowWatermark" for i in [0..node.parallelism - 1])
+      @getMetrics(jid, node.id, metricIds).then (metrics) ->
+        minValue = NaN
+        watermarks = {}
+
+        for key, value of metrics.values
+          subtaskIndex = key.replace('.currentLowWatermark', '')
+          watermarks[subtaskIndex] = value
+
+          if (isNaN(minValue) || value < minValue)
+            minValue = value
+
+        if (!isNaN(minValue) && minValue > watermarksConfig.noWatermark)
+          lowWatermark = minValue
+        else
+          # NaN indicates no watermark available
+          lowWatermark = NaN
+
+        deferred.resolve({"lowWatermark": lowWatermark, "watermarks": watermarks})
+
+      deferred.promise
+
+    deferred = $q.defer()
+    watermarks = {}
+
+    # Request watermarks for each node and update watermarks
+    len = nodes.length
+    angular.forEach nodes, (node, index) =>
+      nodeId = node.id
+      requestWatermarkForNode(node).then (data) ->
+        watermarks[nodeId] = data
+        if (index >= len - 1)
+          deferred.resolve(watermarks)
 
     deferred.promise
 

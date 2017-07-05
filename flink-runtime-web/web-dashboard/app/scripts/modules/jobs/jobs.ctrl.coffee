@@ -42,7 +42,7 @@ angular.module('flinkApp')
 
 # --------------------------------------
 
-.controller 'SingleJobController', ($scope, $state, $stateParams, JobsService, MetricsService, $rootScope, flinkConfig, $interval, $q, watermarksConfig) ->
+.controller 'SingleJobController', ($scope, $state, $stateParams, JobsService, MetricsService, $rootScope, flinkConfig, $interval, $q) ->
   $scope.jobid = $stateParams.jobid
   $scope.job = null
   $scope.plan = null
@@ -53,6 +53,8 @@ angular.module('flinkApp')
   refresher = $interval ->
     JobsService.loadJob($stateParams.jobid).then (data) ->
       $scope.job = data
+      MetricsService.getWatermarks($scope.job.jid, $scope.plan.nodes).then (data) ->
+        $scope.watermarks = data
       $scope.$broadcast 'reload'
 
   , flinkConfig["refresh-interval"]
@@ -81,81 +83,12 @@ angular.module('flinkApp')
     $scope.vertices = data.vertices
     $scope.plan = data.plan
     MetricsService.setupMetrics($stateParams.jobid, data.vertices)
-
-  # Asynchronously requests the watermark metrics for the given nodes. The
-  # returned object has the following structure:
-  #
-  # {
-  #    "<nodeId>": {
-  #          "lowWatermark": <lowWatermark>
-  #          "watermarks": {
-  #               0: <watermark for subtask 0>
-  #               ...
-  #               n: <watermark for subtask n>
-  #            }
-  #       }
-  # }
-  #
-  # If no watermark is available, lowWatermark will be NaN and
-  # the watermarks will be empty.
-  getWatermarks = (nodes) ->
-    # Requests the watermarks for a single vertex. Triggers a request
-    # to the Metrics service.
-    requestWatermarkForNode = (node) =>
-      deferred = $q.defer()
-
-      jid = $scope.job.jid
-
-      # Request metrics for each subtask
-      metricIds = (i + ".currentLowWatermark" for i in [0..node.parallelism - 1])
-      MetricsService.getMetrics(jid, node.id, metricIds).then (metrics) ->
-        minValue = NaN
-        watermarks = {}
-
-        for key, value of metrics.values
-          subtaskIndex = key.replace('.currentLowWatermark', '')
-          watermarks[subtaskIndex] = value
-
-          if (isNaN(minValue) || value < minValue)
-            minValue = value
-
-        if (!isNaN(minValue) && minValue > watermarksConfig.noWatermark)
-          lowWatermark = minValue
-        else
-          # NaN indicates no watermark available
-          lowWatermark = NaN
-
-        deferred.resolve({"lowWatermark": lowWatermark, "watermarks": watermarks})
-
-      deferred.promise
-
-    deferred = $q.defer()
-    watermarks = {}
-
-    # Request watermarks for each node and update watermarks
-    len = nodes.length
-    angular.forEach nodes, (node, index) =>
-      nodeId = node.id
-      requestWatermarkForNode(node).then (data) ->
-        watermarks[nodeId] = data
-        if (index >= len - 1)
-          deferred.resolve(watermarks)
-
-    deferred.promise
+    MetricsService.getWatermarks($scope.job.jid, $scope.plan.nodes).then (data) ->
+      $scope.watermarks = data
 
   # Returns true if the lowWatermark is != NaN
   $scope.hasWatermark = (nodeid) ->
     $scope.watermarks[nodeid] && !isNaN($scope.watermarks[nodeid]["lowWatermark"])
-
-  $scope.$watch 'plan', (newPlan) ->
-    if newPlan
-      getWatermarks(newPlan.nodes).then (data) ->
-        $scope.watermarks = data
-
-  $scope.$on 'reload', () ->
-    if $scope.plan
-      getWatermarks($scope.plan.nodes).then (data) ->
-        $scope.watermarks = data
 
 # --------------------------------------
 
