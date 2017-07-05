@@ -499,3 +499,57 @@ angular.module('flinkApp')
       drawGraph() if newWatermarks && scope.plan
 
     return
+
+# ----------------------------------------------
+
+.directive 'globalOverview', ($timeout) ->
+  template: "
+    <div class='global-overview'>
+      <table class='table table-properties'>
+        <thead>
+          <tr>
+            <th colspan='2'>Global Overview</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Incoming</td>
+            <td class='right'>{{incoming}}</td>
+          </tr>
+          <tr>
+            <td>Outgoing</td>
+            <td class='right'>{{outgoing}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>"
+
+  scope:
+    job: '='
+
+  link: (scope, elem, attrs) ->
+    scope.incoming = 0
+    scope.outgoing = 0
+
+    scope.$watch attrs.job, (data) ->
+      scope.predecessors = []
+      scope.sources = []
+      scope.sinks = []
+
+      if data
+        console.log(data.plan.nodes)
+        angular.forEach(data.plan.nodes, (node) ->
+          if !node.inputs
+            scope.sources.push(node.id)
+          else
+            scope.predecessors = scope.predecessors.concat(_.map(node.inputs, (input) -> input.id))
+        )
+        console.log(scope.sources)
+
+        angular.forEach(data.plan.nodes, (node) ->
+          if !_.contains(scope.predecessors, node.id)
+            scope.sinks.push(node.id)
+        )
+        console.log(scope.sinks)
+
+    return

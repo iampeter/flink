@@ -20,7 +20,8 @@
   border: 1px solid #ddd
   position: relative
   margin-bottom: 20px
-  height: 100%
+  &.full-height
+    height: 100%
   
   .main-canvas
     height: 100%
@@ -69,3 +70,22 @@
     color: black;
   }
 }
+
+#canvas
+  position: relative
+  overflow: hidden
+
+  .global-overview
+    width: 300px
+    height: auto
+    background-color: #ffffff
+    border: 1px solid #ddd
+    position: absolute
+    right: 0
+    bottom: 0
+
+    .table
+      margin-bottom: 0
+
+      td.right
+        text-align: right
