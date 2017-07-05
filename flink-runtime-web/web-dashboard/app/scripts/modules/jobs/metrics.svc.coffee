@@ -261,11 +261,62 @@ angular.module('flinkApp')
     # Request watermarks for each node and update watermarks
     len = nodes.length
     angular.forEach nodes, (node, index) =>
-      nodeId = node.id
-      requestWatermarkForNode(node).then (data) ->
-        watermarks[nodeId] = data
-        if (index >= len - 1)
-          deferred.resolve(watermarks)
+      pr = requestWatermarkForNode(node).then (data) ->
+        watermarks[node.id] = data
+
+      promises.push(pr)
+
+    $q.all(promises).then () =>
+      deferred.resolve(watermarks)
+
+    deferred.promise
+
+  @getGlobalOverview = (jid, nodes) ->
+    deferred = $q.defer()
+
+    promises = []
+
+    getSourcesAndSinks = () =>
+      predecessors = []
+      sources = []
+      sinks = []
+
+      angular.forEach(nodes, (node) ->
+        if !node.inputs
+          sources.push(node.id)
+        else
+          predecessors = predecessors.concat(_.map(node.inputs, (input) -> input.id))
+      )
+
+      angular.forEach(nodes, (node) ->
+        if !_.contains(predecessors, node.id)
+          sinks.push(node.id)
+      )
+
+      [sources, sinks]
+
+    [sources, sinks] = getSourcesAndSinks()
+
+    incoming = 0
+    outgoing = 0
+
+    angular.forEach nodes, (node) =>
+      metricIds = (i + ".numBytesOutPerSecond" for i in [0..node.parallelism - 1]).concat (i + ".numBytesInPerSecond" for i in [0..node.parallelism - 1])
+      pr = @getMetrics(jid, node.id, metricIds).then (metrics) ->
+        angular.forEach(_.keys(metrics.values), (key) =>
+          if key.indexOf("numBytesOutPerSecond") != -1 && _.contains(sources, node.id)
+            outgoing += metrics.values[key]
+          else if key.indexOf("numBytesInPerSecond") != -1 && _.contains(sinks, node.id)
+            incoming += metrics.values[key]
+        )
+
+      promises.push(pr)
+
+    $q.all(promises).then () =>
+      deferred.resolve({
+        incoming: incoming,
+        outgoing: outgoing,
+      })
 
     deferred.promise
 
