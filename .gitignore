@@ -22,6 +22,7 @@ flink-runtime-web/web-dashboard/assets/fonts/
 flink-runtime-web/web-dashboard/node_modules/
 flink-runtime-web/web-dashboard/package-lock.json
 flink-runtime-web/web-dashboard/bower_components/
+flink-runtime-web/web-dashboard/.env
 atlassian-ide-plugin.xml
 out/
 /docs/api

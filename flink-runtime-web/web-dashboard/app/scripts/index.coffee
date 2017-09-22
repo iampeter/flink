@@ -29,8 +29,7 @@ angular.module('flinkApp', ['ui.router', 'angularMoment', 'dndLists'])
 # --------------------------------------
 
 .value 'flinkConfig', {
-  jobServer: ''
-#  jobServer: 'http://localhost:8081/'
+  jobServer: process.env.jobServer,
   "refresh-interval": 10000
 }
 

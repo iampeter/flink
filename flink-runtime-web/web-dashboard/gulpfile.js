@@ -37,6 +37,17 @@ var filter = require('gulp-filter');
 var mainBowerFiles = require('main-bower-files');
 var less = require('gulp-less');
 var path = require('path');
+var header = require('gulp-header');
+var env = require('gulp-env');
+
+try {
+  env({
+    file: '.env',
+    type: 'ini'
+  });
+} catch(e) {
+  process.env.jobServer = '';
+}
 
 var environment = 'production';
 var paths = {
@@ -46,7 +57,7 @@ var paths = {
   vendorLocal: './vendor-local/',
   assets: './assets/',
   tmp: './tmp/'
-}
+};
 
 gulp.task('set-development', function() {
   environment = 'development';
@@ -115,6 +126,7 @@ gulp.task('scripts', function() {
     .pipe(coffee({ bare: true }))
     .pipe(ngAnnotate())
     .pipe(concat('index.js'))
+    .pipe(header('var process = {env: {"NODE_ENV": "<%= NODE_ENV %>", jobServer: "<%= jobServer %>"}};\n', { "NODE_ENV": environment, jobServer: process.env.jobServer } ))
     .pipe(sourcemaps.write());
 
   if (environment == 'production') {
