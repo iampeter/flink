@@ -514,11 +514,11 @@ angular.module('flinkApp')
         <tbody>
           <tr>
             <td>Incoming</td>
-            <td class='right'>{{incoming}}</td>
+            <td class='right'>{{incoming}} b/s</td>
           </tr>
           <tr>
             <td>Outgoing</td>
-            <td class='right'>{{outgoing}}</td>
+            <td class='right'>{{outgoing}} b/s</td>
           </tr>
         </tbody>
       </table>

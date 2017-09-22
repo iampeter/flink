@@ -305,9 +305,9 @@ angular.module('flinkApp')
       pr = @getMetrics(jid, node.id, metricIds).then (metrics) ->
         angular.forEach(_.keys(metrics.values), (key) =>
           if key.indexOf("numBytesOutPerSecond") != -1 && _.contains(sources, node.id)
-            outgoing += metrics.values[key]
-          else if key.indexOf("numBytesInPerSecond") != -1 && _.contains(sinks, node.id)
             incoming += metrics.values[key]
+          else if key.indexOf("numBytesInPerSecond") != -1 && _.contains(sinks, node.id)
+            outgoing += metrics.values[key]
         )
 
       promises.push(pr)
