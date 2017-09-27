@@ -49,12 +49,15 @@ angular.module('flinkApp')
   $scope.watermarks = {}
   $scope.vertices = null
   $scope.backPressureOperatorStats = {}
+  $scope.godata = null
 
   refresher = $interval ->
     JobsService.loadJob($stateParams.jobid).then (data) ->
       $scope.job = data
       MetricsService.getWatermarks($scope.job.jid, $scope.plan.nodes).then (data) ->
         $scope.watermarks = data
+      MetricsService.getGlobalOverview($scope.job.jid, $scope.plan.nodes).then (data) ->
+        $scope.godata = data
       $scope.$broadcast 'reload'
 
   , flinkConfig["refresh-interval"]
@@ -65,6 +68,7 @@ angular.module('flinkApp')
     $scope.watermarks = {}
     $scope.vertices = null
     $scope.backPressureOperatorStats = null
+    $scope.godata = null
 
     $interval.cancel(refresher)
 
@@ -85,6 +89,8 @@ angular.module('flinkApp')
     MetricsService.setupMetrics($stateParams.jobid, data.vertices)
     MetricsService.getWatermarks($scope.job.jid, $scope.plan.nodes).then (data) ->
       $scope.watermarks = data
+    MetricsService.getGlobalOverview($scope.job.jid, $scope.plan.nodes).then (data) ->
+      $scope.godata = data
 
   # Returns true if the lowWatermark is != NaN
   $scope.hasWatermark = (nodeid) ->

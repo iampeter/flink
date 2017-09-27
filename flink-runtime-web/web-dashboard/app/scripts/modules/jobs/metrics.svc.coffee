@@ -258,8 +258,9 @@ angular.module('flinkApp')
     deferred = $q.defer()
     watermarks = {}
 
+    promises = []
+
     # Request watermarks for each node and update watermarks
-    len = nodes.length
     angular.forEach nodes, (node, index) =>
       pr = requestWatermarkForNode(node).then (data) ->
         watermarks[node.id] = data
@@ -299,15 +300,28 @@ angular.module('flinkApp')
 
     incoming = 0
     outgoing = 0
+    incomingR = 0
+    outgoingR = 0
 
     angular.forEach nodes, (node) =>
-      metricIds = (i + ".numBytesOutPerSecond" for i in [0..node.parallelism - 1]).concat (i + ".numBytesInPerSecond" for i in [0..node.parallelism - 1])
+      metricIds = (i + ".numBytesInLocalPerSecond" for i in [0..node.parallelism - 1])
+        .concat(i + ".numBytesInRemotePerSecond" for i in [0..node.parallelism - 1])
+        .concat(i + ".numBytesOutPerSecond" for i in [0..node.parallelism - 1])
+        .concat(i + ".numRecordsInPerSecond" for i in [0..node.parallelism - 1])
+        .concat(i + ".numRecordsOutPerSecond" for i in [0..node.parallelism - 1])
+
       pr = @getMetrics(jid, node.id, metricIds).then (metrics) ->
         angular.forEach(_.keys(metrics.values), (key) =>
           if key.indexOf("numBytesOutPerSecond") != -1 && _.contains(sources, node.id)
             incoming += metrics.values[key]
-          else if key.indexOf("numBytesInPerSecond") != -1 && _.contains(sinks, node.id)
+          else if key.indexOf("numBytesInLocalPerSecond") != -1 && _.contains(sinks, node.id)
             outgoing += metrics.values[key]
+          else if key.indexOf("numBytesInRemotePerSecond") != -1 && _.contains(sinks, node.id)
+            outgoing += metrics.values[key]
+          else if key.indexOf("numRecordsOutPerSecond") != -1 && _.contains(sources, node.id)
+            incomingR += metrics.values[key]
+          else if key.indexOf("numRecordsInPerSecond") != -1 && _.contains(sinks, node.id)
+            outgoingR += metrics.values[key]
         )
 
       promises.push(pr)
@@ -316,6 +330,9 @@ angular.module('flinkApp')
       deferred.resolve({
         incoming: incoming,
         outgoing: outgoing,
+        incomingR: incomingR,
+        outgoingR: outgoingR
+        latency: 0
       })
 
     deferred.promise

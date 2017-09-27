@@ -566,8 +566,13 @@ livechart {
   position: relative;
   margin-bottom: 20px;
 }
-.canvas-wrapper.full-height {
-  height: 100%;
+.canvas-wrapper.main-wrapper {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 82px;
+  margin-bottom: 0;
 }
 .canvas-wrapper .main-canvas {
   height: 100%;
@@ -612,26 +617,29 @@ livechart {
   overflow: hidden;
 }
 #canvas .global-overview {
-  width: 300px;
-  height: auto;
-  background-color: #fff;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-  -webkit-border-radius: 5px;
-  -moz-border-radius: 5px;
-  -webkit-box-shadow: 0 0 10px rgba(0,0,0,0.2);
-  -moz-box-shadow: 0 0 10px rgba(0,0,0,0.2);
-  -webkit-box-shadow: 0 0 10px rgba(0,0,0,0.2);
-  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+  padding: 5px 10px;
+  background-color: #f5f5f5;
+  border-left: 1px solid #ddd;
+  border-bottom: 1px solid #ddd;
+  border-right: 1px solid #ddd;
   position: absolute;
-  right: 10px;
-  bottom: 10px;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  height: 82px;
 }
-#canvas .global-overview .table {
-  margin-bottom: 0;
+#canvas .global-overview .data {
+  font-size: 26px;
 }
-#canvas .global-overview .table td.right {
-  text-align: right;
+#canvas .global-overview .meta {
+  text-transform: uppercase;
+  font-size: 12px;
+  color: #888;
+  white-space: nowrap;
+  overflow: hidden;
+}
+#canvas .global-overview .meta.unit {
+  text-transform: none;
 }
 svg.graph {
   overflow: hidden;

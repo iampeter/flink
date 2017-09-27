@@ -19,10 +19,10 @@ limitations under the License.
 -->
 <split>
   <div id="canvas" class="split">
-    <div class="canvas-wrapper full-height">
+    <div class="canvas-wrapper main-wrapper">
       <div job-plan="job-plan" plan="plan" watermarks="watermarks" jobid="{{jobid}}" set-node="changeNode(nodeid)" class="main-canvas"></div>
     </div>
-    <div global-overview="global-overview" job="job"></div>
+    <div global-overview="global-overview" godata="godata" ng-if="job"></div>
   </div>
   <div id="job-panel" class="split">
     <div ng-if="plan" class="panel panel-default panel-multi">

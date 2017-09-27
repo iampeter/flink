@@ -502,54 +502,68 @@ angular.module('flinkApp')
 
 # ----------------------------------------------
 
-.directive 'globalOverview', ($timeout) ->
+.directive 'globalOverview', ($timeout, BytesService) ->
   template: "
     <div class='global-overview'>
-      <table class='table table-properties'>
-        <thead>
-          <tr>
-            <th colspan='2'>Global Overview</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Incoming</td>
-            <td class='right'>{{incoming}} b/s</td>
-          </tr>
-          <tr>
-            <td>Outgoing</td>
-            <td class='right'>{{outgoing}} b/s</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class='row'>
+          <div class='col-xs-5'>
+            <div class='row'>
+              <div class='col-xs-12'>
+                <div class='meta title'>Ingress Throughput</div>
+              </div>
+            </div>
+            <div class='row'>
+              <div class='col-xs-6'>
+                <div class='data'>{{incoming[0]}}</div>
+                <div class='meta unit'>{{incoming[1]}}/s</div>
+              </div>
+              <div class='col-xs-6'>
+                <div class='data'>{{incomingR}}</div>
+                <div class='meta unit'>records/s</div>
+              </div>
+            </div>
+          </div>
+          <div class='col-xs-5'>
+            <div class='row'>
+              <div class='col-xs-12'>
+                <div class='meta title'>Egress Throughput</div>
+              </div>
+            </div>
+            <div class='row'>
+              <div class='col-xs-6'>
+                <div class='data'>{{outgoing[0]}}</div>
+                <div class='meta unit'>{{outgoing[1]}}/s</div>
+              </div>
+              <div class='col-xs-6'>
+                <div class='data'>{{outgoingR}}</div>
+                <div class='meta unit'>records/s</div>
+              </div>
+            </div>
+          </div>
+          <div class='col-xs-2'>
+            <div class='meta'>End-to-end Latency</div>
+            <div class='data'>{{latency}}</div>
+            <div class='meta unit'>ms</div>
+          </div>
+      </div>
     </div>"
 
   scope:
-    job: '='
+    godata: '='
 
   link: (scope, elem, attrs) ->
-    scope.incoming = 0
-    scope.outgoing = 0
+    scope.incoming = [0, "b"]
+    scope.outgoing = [0, "b"]
+    scope.incomingR = 0
+    scope.outgoingR = 0
+    scope.latency = 0
 
-    scope.$watch attrs.job, (data) ->
-      scope.predecessors = []
-      scope.sources = []
-      scope.sinks = []
-
+    scope.$watch attrs.godata, (data) ->
       if data
-        console.log(data.plan.nodes)
-        angular.forEach(data.plan.nodes, (node) ->
-          if !node.inputs
-            scope.sources.push(node.id)
-          else
-            scope.predecessors = scope.predecessors.concat(_.map(node.inputs, (input) -> input.id))
-        )
-        console.log(scope.sources)
-
-        angular.forEach(data.plan.nodes, (node) ->
-          if !_.contains(scope.predecessors, node.id)
-            scope.sinks.push(node.id)
-        )
-        console.log(scope.sinks)
+        scope.incoming = BytesService.humanize(data.incoming)
+        scope.outgoing = BytesService.humanize(data.outgoing)
+        scope.incomingR = data.incomingR
+        scope.outgoingR = data.outgoingR
+        scope.latency = data.latency
 
     return

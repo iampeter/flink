@@ -30,3 +30,24 @@ angular.module('flinkApp')
 
 
   @
+
+.service 'BytesService', () ->
+  @humanize = (amount) ->
+    return null if typeof amount is "undefined" or amount is null
+
+    result = (v, u) ->
+      [v, u]
+
+    units = ["B", "KB", "MB", "GB", "TB", "PB", "EB"]
+    converter = (value, power) ->
+      base = Math.pow(1024, power)
+      if value < base
+        return result((value / base).toFixed(2), units[power])
+      else if value < base * 1000
+        return result((value / base).toPrecision(3), units[power])
+      else
+        return converter(value, power + 1)
+
+    if amount < 1000 then result(amount, "B") else converter(amount, 1)
+
+  @

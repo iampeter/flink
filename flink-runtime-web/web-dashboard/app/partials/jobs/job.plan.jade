@@ -17,9 +17,9 @@
 
 split
   .split#canvas
-    .canvas-wrapper.full-height
+    .canvas-wrapper.main-wrapper
       div.main-canvas(job-plan, plan="plan", watermarks="watermarks" jobid="{{jobid}}", set-node="changeNode(nodeid)")
-    div(global-overview, job="job")
+    div(global-overview, godata="godata", ng-if="job")
 
   .split#job-panel
     .panel.panel-default.panel-multi(ng-if="plan")

@@ -65,19 +65,13 @@ angular.module('flinkApp')
     # TODO: extend... a lot
     if text then text.replace(/&gt;/g, ">").replace(/<br\/>/g,"") else ''
 
-.filter "humanizeBytes", ->
-  (bytes) ->
-    units = ["B", "KB", "MB", "GB", "TB", "PB", "EB"]
-    converter = (value, power) ->
-      base = Math.pow(1024, power)
-      if value < base
-        return (value / base).toFixed(2) + " " + units[power]
-      else if value < base * 1000
-        return (value / base).toPrecision(3) + " " + units[power]
-      else
-        return converter(value, power + 1)
-    return "" if typeof bytes is "undefined" or bytes is null
-    if bytes < 1000 then bytes + " B" else converter(bytes, 1)
+.filter "humanizeBytes", ['BytesService', (BytesService) ->
+  (amount) ->
+    r = BytesService.humanize(amount)
+    return "" unless r
+
+    r[0] + " " + r[1]
+]
 
 .filter "toLocaleString", ->
   (text) -> text.toLocaleString()
