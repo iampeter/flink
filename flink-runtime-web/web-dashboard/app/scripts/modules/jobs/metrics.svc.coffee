@@ -314,9 +314,7 @@ angular.module('flinkApp')
         angular.forEach(_.keys(metrics.values), (key) =>
           if key.indexOf("numBytesOutPerSecond") != -1 && _.contains(sources, node.id)
             incoming += metrics.values[key]
-          else if key.indexOf("numBytesInLocalPerSecond") != -1 && _.contains(sinks, node.id)
-            outgoing += metrics.values[key]
-          else if key.indexOf("numBytesInRemotePerSecond") != -1 && _.contains(sinks, node.id)
+          else if (key.indexOf("numBytesInLocalPerSecond") != -1 or key.indexOf("numBytesInRemotePerSecond") != -1) && _.contains(sinks, node.id)
             outgoing += metrics.values[key]
           else if key.indexOf("numRecordsOutPerSecond") != -1 && _.contains(sources, node.id)
             incomingR += metrics.values[key]

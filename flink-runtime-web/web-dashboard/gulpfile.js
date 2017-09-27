@@ -45,6 +45,10 @@ try {
     file: '.env',
     type: 'ini'
   });
+
+  if (process.env.jobServer && process.env.jobServer[process.env.jobServer.length - 1] !== '/') {
+    process.env.jobServer += '/'
+  }
 } catch(e) {
   process.env.jobServer = '';
 }
