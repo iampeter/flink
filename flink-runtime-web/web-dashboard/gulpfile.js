@@ -130,7 +130,7 @@ gulp.task('scripts', function() {
     .pipe(coffee({ bare: true }))
     .pipe(ngAnnotate())
     .pipe(concat('index.js'))
-    .pipe(header('var process = {env: {"NODE_ENV": "<%= NODE_ENV %>", jobServer: "<%= jobServer %>"}};\n', { "NODE_ENV": environment, jobServer: process.env.jobServer } ))
+    .pipe(header('var process = {env: {"NODE_ENV": "<%= NODE_ENV %>", jobServer: "<%= jobServer %>"}};\n', { "NODE_ENV": environment, jobServer: environment == 'development' ? process.env.jobServer : '' } ))
     .pipe(sourcemaps.write());
 
   if (environment == 'production') {
