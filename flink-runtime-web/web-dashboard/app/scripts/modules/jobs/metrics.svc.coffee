@@ -209,6 +209,25 @@ angular.module('flinkApp')
 
     deferred.promise
 
+  @getLatencies = (jobid, nodeid, metricIds) ->
+    deferred = $q.defer()
+
+    ids = metricIds.join(",")
+
+    $http.get flinkConfig.jobServer + "jobs/" + jobid + "/vertices/" + nodeid + "/metrics?get=" + ids
+    .success (data) =>
+      result = {}
+      angular.forEach data, (v, k) ->
+        result[v.id] = _.values(JSON.parse(v.value))
+
+      newValue = {
+        timestamp: Date.now()
+        values: result
+      }
+      deferred.resolve(newValue)
+
+    deferred.promise
+
 
   # Asynchronously requests the watermark metrics for the given nodes. The
   # returned object has the following structure:
@@ -302,6 +321,32 @@ angular.module('flinkApp')
     outgoing = 0
     incomingR = 0
     outgoingR = 0
+    latencySum = 0
+    latencyCount = 0
+
+    angular.forEach sinks, (sink) =>
+      def = $q.defer()
+
+      @getAvailableMetrics(jid, sink).then (metrics) =>
+        mList = _.map(_.filter(metrics, (metric) =>
+          metric.id.indexOf(".latency") == metric.id.length - 8 # ends with ".latency"
+        ), (metric) =>
+          metric.id
+        )
+
+        if mList.length > 0
+          @getLatencies(jid, sink, mList).then (latencies) =>
+            angular.forEach(_.flatten(_.values(latencies.values)), (value) =>
+              latencySum += value.mean
+              latencyCount += 1
+            )
+
+            def.resolve({})
+
+        else
+          def.resolve({})
+
+      promises.push(def.promise)
 
     angular.forEach nodes, (node) =>
       metricIds = (i + ".numBytesInLocalPerSecond" for i in [0..node.parallelism - 1])
@@ -330,7 +375,7 @@ angular.module('flinkApp')
         outgoing: outgoing,
         incomingR: incomingR,
         outgoingR: outgoingR
-        latency: 0
+        latency: if latencyCount > 0 then (latencySum / latencyCount).toFixed(2) else 0
       })
 
     deferred.promise
